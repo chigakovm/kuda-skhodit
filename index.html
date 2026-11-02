@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F5F6FB">
+<title>Куда сходить?!</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='44' fill='%23E5413C'/><circle cx='50' cy='50' r='18' fill='white'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F5F6FB;
+    --card: #FFFFFF;
+    --ink: #1E2242;
+    --ink-2: #555A80;
+    --ink-3: #8C90AE;
+    --rule: #E3E4EE;
+    --red: #E5413C;
+    --red-deep: #B42F2B;
+    --green: #23885A;
+    --focus: #3D6BFF;
+    --c-sight: #E42313;
+    --c-museum: #943E90;
+    --c-park: #3E9E3E;
+    --c-food: #F07E24;
+    --c-bar: #0072BA;
+    --c-cinema: #E0B000;
+    --c-theatre: #8D5B2D;
+    --c-active: #19A9D8;
+    --display: 'Unbounded', 'Arial Black', system-ui, sans-serif;
+    --text: 'Golos Text', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 16px/1.55 var(--text);
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 8px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .wrap { max-width: 560px; margin: 0 auto; padding: 24px 16px 0; }
+
+  /* Шапка */
+  .masthead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  h1 {
+    font: 700 clamp(34px, 10vw, 48px)/1.02 var(--display);
+    letter-spacing: -0.02em; margin: 0;
+  }
+  .lede { margin: 10px 0 0; color: var(--ink-2); max-width: 34ch; }
+  .weather {
+    flex: none; margin-top: 6px; padding: 6px 10px; border-radius: 999px;
+    background: var(--card); border: 1px solid var(--rule); font-size: 14px; color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .demo {
+    margin: 16px 0 0; padding: 10px 14px; border-radius: 14px;
+    background: #FFF6D6; color: #6B5400; font-size: 14px;
+  }
+
+  /* Вкладки */
+  .tabs { display: flex; gap: 6px; margin: 22px 0 8px; padding: 4px; background: #E9EAF3; border-radius: 16px; }
+  .tabs button {
+    flex: 1; border: 0; background: transparent; padding: 9px 6px; border-radius: 12px;
+    font-weight: 500; color: var(--ink-2);
+  }
+  .tabs button[aria-selected="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(30,34,66,.12); }
+  [hidden] { display: none !important; }
+
+  /* Секции настроек */
+  .field { margin-top: 26px; }
+  .label { display: block; font-weight: 600; margin-bottom: 10px; }
+  .label small { font-weight: 400; color: var(--ink-3); margin-left: 6px; }
+
+  .seg { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seg button {
+    border: 1.5px solid var(--rule); background: var(--card); border-radius: 999px;
+    padding: 8px 16px; font-weight: 500;
+  }
+  .seg button[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: #fff; }
+
+  /* Линия метро для зон */
+  .line { position: relative; margin: 0; padding: 0; list-style: none; }
+  .station {
+    position: relative; display: grid; grid-template-columns: 44px 1fr auto; align-items: center;
+    width: 100%; min-height: 50px; padding: 0 4px 0 0; border: 0; background: transparent; text-align: left;
+  }
+  .station::before {
+    content: ''; position: absolute; left: 19px; width: 6px; top: 0; bottom: 0; background: var(--red);
+  }
+  .station.first::before { top: 50%; }
+  .station.last::before { bottom: 50%; }
+  .station.rail::before {
+    background: repeating-linear-gradient(to bottom, var(--red) 0 7px, transparent 7px 12px);
+  }
+  .station .dot {
+    position: relative; z-index: 1; justify-self: center; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--card); border: 5px solid var(--red); transition: background .15s;
+  }
+  .station[aria-pressed="true"] .dot { background: var(--red); box-shadow: inset 0 0 0 3px var(--card); }
+  .station .st-name { font-weight: 500; font-size: 17px; }
+  .station[aria-pressed="false"] .st-name { color: var(--ink-2); }
+  .station .st-hint { color: var(--ink-3); font-size: 14px; }
+  .station.transfer::after {
+    content: 'пересадка на электричку'; position: absolute; left: 44px; top: -9px;
+    font-size: 12px; color: var(--ink-3); background: var(--paper); padding: 0 4px 0 0;
+  }
+
+  /* Категории */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 12px;
+    border-radius: 999px; border: 1.5px solid var(--rule); background: var(--card); font-weight: 500;
+  }
+  .chip::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--c, var(--ink)); }
+  .chip.all::before { background: conic-gradient(var(--c-sight) 0 25%, var(--c-park) 0 50%, var(--c-bar) 0 75%, var(--c-food) 0); }
+  .chip[aria-pressed="true"] { border-color: var(--c, var(--ink)); background: color-mix(in srgb, var(--c, var(--ink)) 10%, white); }
+
+  .input {
+    width: 100%; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--rule); background: var(--card);
+  }
+  .input:focus { border-color: var(--ink-3); outline: none; }
+  .input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+
+  /* Большая кнопка */
+  .go-bar {
+    position: sticky; bottom: 0; z-index: 5; margin-top: 28px;
+    padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, var(--paper) 72%, rgba(245,246,251,0));
+  }
+  /* когда билет на экране, кнопка не должна перекрывать его ссылки */
+  .has-result .go-bar { position: static; background: none; }
+  .go {
+    position: relative; width: 100%; height: 68px; border: 0; border-radius: 22px;
+    background: var(--red); color: #fff; font: 700 21px/1 var(--display); letter-spacing: -0.01em;
+    box-shadow: 0 6px 0 var(--red-deep); transition: transform .08s, box-shadow .08s;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+  }
+  .go:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 2px 0 var(--red-deep); }
+  .go:disabled { cursor: progress; }
+  .go .die { font-size: 26px; display: inline-block; }
+  .busy .go .die { animation: roll .7s linear infinite; }
+  @keyframes roll { to { transform: rotate(360deg); } }
+  .status { min-height: 22px; margin: 10px 0 0; text-align: center; color: var(--ink-2); font-size: 14px; }
+
+  /* Билет с результатом */
+  .result { margin-top: 18px; }
+  .ticket {
+    --c: var(--ink);
+    background: var(--card); border-radius: 26px; overflow: hidden;
+    box-shadow: 0 1px 0 var(--rule), 0 22px 44px -28px rgba(30,34,66,.45);
+  }
+  .ticket.print { animation: print .6s cubic-bezier(.2,.8,.2,1); }
+  @keyframes print {
+    from { clip-path: inset(0 0 100% 0 round 26px); transform: translateY(-10px); }
+    to { clip-path: inset(0 0 0 0 round 26px); transform: none; }
+  }
+  .media { position: relative; height: 210px; background: var(--c); overflow: hidden; }
+  .media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .media .glyph {
+    position: absolute; inset: 0; display: grid; place-items: center; font-size: 76px;
+    background:
+      radial-gradient(circle at 18% 28%, rgba(255,255,255,.22) 0 46px, transparent 47px),
+      radial-gradient(circle at 84% 78%, rgba(255,255,255,.16) 0 70px, transparent 71px);
+  }
+  .media .stamp {
+    position: absolute; left: 16px; bottom: 14px; padding: 6px 12px; border-radius: 999px;
+    background: rgba(255,255,255,.94); color: var(--ink); font-size: 14px; font-weight: 600;
+  }
+  .t-body { padding: 20px 20px 4px; }
+  .t-title { margin: 0; color: var(--ink-2); font-weight: 500; }
+  .t-name { margin: 4px 0 0; font: 700 25px/1.15 var(--display); letter-spacing: -0.015em; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .pill { padding: 4px 10px; border-radius: 999px; background: #EEEFF6; font-size: 14px; color: var(--ink-2); }
+  .pill.cat { background: color-mix(in srgb, var(--c) 12%, white); color: color-mix(in srgb, var(--c) 70%, black); font-weight: 500; }
+  .rating { margin: 12px 0 0; font-weight: 600; }
+  .rating span { font-weight: 400; color: var(--ink-3); }
+  .pitch { margin: 14px 0 0; font-size: 17px; line-height: 1.6; }
+  .tip { margin: 14px 0 0; padding: 12px 14px; border-radius: 14px; background: #FFF6D6; color: #5B4700; font-size: 15px; }
+  .tip b { font-weight: 600; }
+  .travel { margin: 10px 0 0; color: var(--ink-2); font-size: 15px; }
+  .perf {
+    height: 28px; margin-top: 16px; position: relative;
+    background:
+      radial-gradient(circle at left center, var(--paper) 12px, transparent 13px),
+      radial-gradient(circle at right center, var(--paper) 12px, transparent 13px);
+  }
+  .perf::after { content: ''; position: absolute; left: 22px; right: 22px; top: 50%; border-top: 2px dashed var(--rule); }
+  .t-actions { padding: 2px 20px 20px; }
+  .lrow { display: grid; grid-template-columns: 96px 1fr 1fr; gap: 8px; align-items: center; margin-top: 8px; }
+  .lrow:first-child { margin-top: 0; }
+  .lrow .lab { color: var(--ink-2); font-weight: 500; font-size: 15px; }
+  .lnk.wide { margin-top: 8px; }
+  .lnk {
+    display: flex; align-items: center; justify-content: center; text-align: center; gap: 6px;
+    min-height: 46px; padding: 8px 10px; border-radius: 14px; text-decoration: none; font-weight: 500; font-size: 15px;
+    border: 1.5px solid var(--rule); background: var(--card);
+  }
+  .lnk.main { border-color: var(--ink); background: var(--ink); color: #fff; }
+  .lnk:hover { border-color: var(--ink-3); }
+  .lnk.main:hover { background: #2C3159; }
+  .fb { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .btn {
+    min-height: 48px; padding: 10px 14px; border-radius: 14px; border: 1.5px solid var(--rule);
+    background: var(--card); font-weight: 600;
+  }
+  .btn.go-yes { grid-column: 1 / -1; background: var(--green); border-color: var(--green); color: #fff; font-size: 17px; }
+  .btn.go-yes[aria-pressed="true"] { background: #E5F4EC; color: var(--green); }
+  .btn.no { color: var(--red); }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .fineprint { margin: 14px 0 0; font-size: 13px; color: var(--ink-3); }
+  .empty { padding: 22px; border-radius: 22px; background: var(--card); border: 1.5px dashed var(--rule); }
+  .empty h2 { font: 700 19px/1.25 var(--display); margin: 0 0 6px; }
+  .empty p { margin: 0; color: var(--ink-2); }
+
+  /* История */
+  .hist { list-style: none; margin: 18px 0 0; padding: 0; }
+  .h-item { padding: 16px 0; border-bottom: 1px solid var(--rule); }
+  .h-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .h-name { font-weight: 600; display: flex; align-items: baseline; gap: 8px; }
+  .h-name::before { content: ''; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--c, var(--ink-3)); transform: translateY(-1px); }
+  .h-sub { color: var(--ink-3); font-size: 14px; margin-top: 2px; padding-left: 18px; }
+  .h-comment { margin-top: 6px; padding-left: 18px; color: var(--ink-2); font-size: 15px; }
+  .st { flex: none; font-size: 13px; padding: 3px 9px; border-radius: 999px; background: #EEEFF6; color: var(--ink-2); }
+  .st.like { background: #E5F4EC; color: var(--green); }
+  .st.dislike { background: #FDECEB; color: var(--red-deep); }
+  .st.going { background: #FFF1C9; color: #6B5400; }
+  .rate { display: grid; grid-template-columns: 1fr auto auto; gap: 6px; margin-top: 10px; padding-left: 18px; }
+  .rate .input { padding: 9px 12px; font-size: 15px; }
+  .rate .btn { min-height: 42px; padding: 8px 12px; font-size: 15px; }
+
+  /* Форма добавления */
+  .form .field { margin-top: 18px; }
+  .hint { margin: 6px 0 0; font-size: 14px; color: var(--ink-3); }
+  .check { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+  .check input { width: 20px; height: 20px; accent-color: var(--ink); }
+  .submit { width: 100%; margin-top: 24px; min-height: 54px; border: 0; border-radius: 16px; background: var(--ink); color: #fff; font-weight: 600; font-size: 17px; }
+
+  /* Вход */
+  .gate { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+  .gate-card { width: 100%; max-width: 380px; }
+  .gate-card h1 { font-size: 40px; }
+  .gate-card p { color: var(--ink-2); }
+  .err { color: var(--red-deep); font-size: 14px; min-height: 20px; margin: 8px 0 0; }
+
+  footer { margin: 34px 0 0; padding: 18px 0 40px; color: var(--ink-3); font-size: 14px; border-top: 1px solid var(--rule); }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(110px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    z-index: 20; max-width: min(92vw, 480px); padding: 12px 16px; border-radius: 14px;
+    background: var(--ink); color: #fff; font-size: 15px; box-shadow: 0 10px 30px -12px rgba(30,34,66,.6);
+  }
+
+  @media (min-width: 600px) {
+    .wrap { padding-top: 48px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="gate" class="gate" hidden>
+  <form class="gate-card" id="gateForm">
+    <h1>Куда сходить?!</h1>
+    <p>Сайт для двоих. Введите PIN, который вы задали в настройках скрипта.</p>
+    <label class="sr-only" for="pin">PIN</label>
+    <input class="input" id="pin" type="password" inputmode="text" autocomplete="current-password" placeholder="PIN" required>
+    <p class="err" id="gateErr" role="alert"></p>
+    <button class="submit" type="submit">Войти</button>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <div class="wrap">
+    <header class="masthead">
+      <div>
+        <h1>Куда сходить?!</h1>
+        <p class="lede">Подберём, куда выбраться вдвоём: от кофейни за углом до другого города.</p>
+      </div>
+      <span class="weather" id="weather" hidden></span>
+    </header>
+    <p class="demo" id="demoNote" hidden>Демо-режим: сайт ещё не подключён к таблице, поэтому показываем несколько мест для примера. Как подключить — в инструкции.</p>
+
+    <nav class="tabs" role="tablist" aria-label="Разделы">
+      <button role="tab" id="tab-pick" aria-controls="panel-pick" aria-selected="true">Выбрать</button>
+      <button role="tab" id="tab-history" aria-controls="panel-history" aria-selected="false">История</button>
+      <button role="tab" id="tab-add" aria-controls="panel-add" aria-selected="false">Добавить</button>
+    </nav>
+
+    <!-- Выбор -->
+    <section id="panel-pick" role="tabpanel" aria-labelledby="tab-pick">
+      <div class="result" id="result" aria-live="polite"></div>
+
+      <div class="field">
+        <span class="label" id="lbl-when">Когда идём</span>
+        <div class="seg" role="group" aria-labelledby="lbl-when" id="when">
+          <button type="button" data-v="evening">Вечер буднего дня</button>
+          <button type="button" data-v="weekend">Выходной</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label" id="lbl-zones">Как далеко <small>можно выбрать несколько станций</small></span>
+        <div class="line" role="group" aria-labelledby="lbl-zones" id="zones"></div>
+      </div>
+
+      <div class="field">
+        <span class="label" id="lbl-cats">Что хочется</span>
+        <div class="chips" role="group" aria-labelledby="lbl-cats" id="cats"></div>
+      </div>
+
+      <div class="field">
+        <label class="label" for="wish">Пожелание <small>необязательно</small></label>
+        <input class="input" id="wish" type="text" maxlength="200" placeholder="Например: тепло и вкусно">
+      </div>
+
+      <div class="field">
+        <span class="label" id="lbl-who">Кто выбирает</span>
+        <div class="seg" role="group" aria-labelledby="lbl-who" id="who"></div>
+      </div>
+
+      <div class="go-bar" id="goBar">
+        <button class="go" id="go" type="button"><span class="die" aria-hidden="true">🎲</span>Куда сходить?!</button>
+        <p class="status" id="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- История -->
+    <section id="panel-history" role="tabpanel" aria-labelledby="tab-history" hidden>
+      <ul class="hist" id="hist"></ul>
+    </section>
+
+    <!-- Добавить место -->
+    <section id="panel-add" role="tabpanel" aria-labelledby="tab-add" hidden>
+      <form class="form" id="addForm" novalidate>
+        <div class="field">
+          <label class="label" for="a-name">Название</label>
+          <input class="input" id="a-name" name="name" required maxlength="120" placeholder="Например: Кофейня у дома">
+        </div>
+        <div class="field">
+          <label class="label" for="a-cat">Что это</label>
+          <select class="input" id="a-cat" name="category"></select>
+        </div>
+        <div class="field">
+          <label class="label" for="a-link">Ссылка из 2ГИС или Яндекс Карт</label>
+          <input class="input" id="a-link" name="link" inputmode="url" placeholder="https://2gis.ru/moscow/firm/…">
+          <p class="hint">Откройте место в картах и скопируйте ссылку из адресной строки — координаты возьмём оттуда.</p>
+        </div>
+        <div class="field">
+          <label class="label" for="a-zone">Где это</label>
+          <select class="input" id="a-zone" name="zone">
+            <option value="">В Москве — посчитаем время от дома</option>
+            <option value="near">В Москве, рядом</option>
+            <option value="mid">В Москве, подальше</option>
+            <option value="far">В Москве, далековато</option>
+            <option value="suburb">Пригород</option>
+            <option value="city">Другой город</option>
+          </select>
+        </div>
+        <div class="field" data-out>
+          <label class="label" for="a-city">Город</label>
+          <input class="input" id="a-city" name="city" maxlength="60" placeholder="Например: Тула">
+        </div>
+        <div class="field" data-out>
+          <label class="label" for="a-travel">Как добраться</label>
+          <input class="input" id="a-travel" name="travel" maxlength="120" placeholder="Например: ≈ 2 ч на «Ласточке» с Курского">
+        </div>
+        <div class="field" data-out>
+          <label class="check"><input type="checkbox" id="a-night" name="overnight"> Можно остаться на ночь</label>
+        </div>
+        <div class="field" data-in>
+          <label class="label" for="a-min">Минут в пути от дома <small>если знаете точно</small></label>
+          <input class="input" id="a-min" name="minutes" type="number" min="1" max="600" inputmode="numeric">
+        </div>
+        <div class="field">
+          <label class="label" for="a-note">Заметка <small>ИИ её прочитает</small></label>
+          <input class="input" id="a-note" name="note" maxlength="300" placeholder="Например: там лучшие сырники, брать с собой наличные">
+        </div>
+        <p class="err" id="addErr" role="alert"></p>
+        <button class="submit" type="submit">Добавить место</button>
+      </form>
+    </section>
+
+    <footer id="footer">Сделано для двоих. Хорошего вечера!</footer>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+/* ===== Настройка: вставьте сюда адрес веб-приложения Apps Script (заканчивается на /exec) ===== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbw84fG9yae7pxvQ0KTyWwzZ7xyMdreEAENAqWRjMHnol818lCxrRzNra5nnpaETR9bQGA/exec';
+
+const DEMO = !API_URL;
+
+const CATS = [
+  { key: 'sight', label: 'Достопримечательности', emoji: '🏛️' },
+  { key: 'museum', label: 'Музеи и выставки', emoji: '🖼️' },
+  { key: 'park', label: 'Парки и прогулки', emoji: '🌳' },
+  { key: 'food', label: 'Кафе и гастро', emoji: '🍜' },
+  { key: 'bar', label: 'Бары', emoji: '🍸' },
+  { key: 'cinema', label: 'Кино', emoji: '🍿' },
+  { key: 'theatre', label: 'Театры и концерты', emoji: '🎭' },
+  { key: 'active', label: 'Активности', emoji: '🎳' },
+];
+const ZONES = [
+  { key: 'near', label: 'Рядом', hint: 'до 30 минут' },
+  { key: 'mid', label: 'Подальше', hint: 'до часа' },
+  { key: 'far', label: 'Далековато', hint: 'до полутора часов' },
+  { key: 'suburb', label: 'Пригород', hint: 'на день' },
+  { key: 'city', label: 'Другой город', hint: 'с ночёвкой' },
+];
+const STATUS_RU = { suggested: 'предложено', going: 'идём', like: 'понравилось', dislike: 'не понравилось', skip: 'пропустили' };
+const LOADING = [
+  'Советуемся с голубями на Чистых прудах',
+  'Сверяемся со схемой метро',
+  'Бросаем кубик. Дважды, для верности',
+  'ИИ листает ваши прошлые оценки',
+  'Проверяем, где сегодня уютнее',
+  'Выбираем между «вау» и «ну наконец-то»',
+];
+
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem('kuda.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('kuda.' + k, JSON.stringify(v)); } catch (e) { /* приватный режим */ } },
+  del(k) { try { localStorage.removeItem('kuda.' + k); } catch (e) { /* ничего */ } },
+};
+
+const state = {
+  names: ['Он', 'Она'],
+  when: LS.get('when', new Date().getDay() % 6 === 0 ? 'weekend' : 'evening'),
+  zones: new Set(LS.get('zones', ['near', 'mid'])),
+  cats: new Set(LS.get('cats', [])),
+  who: LS.get('who', 'вместе'),
+  result: null,
+  exclude: [],
+  busy: false,
+};
+
+const $ = (s, root = document) => root.querySelector(s);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function h(tag, props, ...children) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v === null || v === undefined || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'style') el.style.cssText = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of children.flat()) {
+    if (c === null || c === undefined || c === false || c === '') continue;
+    el.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  }
+  return el;
+}
+
+function safeUrl(u) { return /^https:\/\//i.test(String(u || '')) ? u : null; }
+function catOf(key) { return CATS.find(c => c.key === key) || { key, label: key, emoji: '✨' }; }
+function catByLabel(label) { return CATS.find(c => c.label === label || c.key === label); }
+function plural(n, one, few, many) {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+  return many;
+}
+
+let toastTimer;
+function toast(text) {
+  const t = $('#toast');
+  t.textContent = text;
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, 3200);
+}
+
+class AppError extends Error {
+  constructor(code, message) { super(message); this.code = code; }
+}
+
+async function api(action, payload = {}) {
+  if (DEMO) return demoApi(action, payload);
+  let res;
+  try {
+    res = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(Object.assign({ action, pin: LS.get('pin', '') }, payload)),
+    });
+  } catch (e) {
+    throw new AppError('network', 'Нет связи со скриптом. Проверьте интернет и адрес API_URL.');
+  }
+  let data;
+  try { data = await res.json(); } catch (e) {
+    throw new AppError('server', 'Скрипт ответил не так, как ждали. Проверьте, что веб-приложение развёрнуто с доступом «Все».');
+  }
+  if (!data.ok) throw new AppError(data.error || 'server', data.message || 'Что-то пошло не так.');
+  return data;
+}
+
+function handleError(e) {
+  console.error(e);
+  if (e.code === 'pin' || e.code === 'locked') { showGate(e.message); return; }
+  toast(e.message || 'Что-то пошло не так.');
+}
+
+/* ===== Вход ===== */
+function showGate(message) {
+  $('#app').hidden = true;
+  $('#gate').hidden = false;
+  $('#gateErr').textContent = message || '';
+  setTimeout(() => $('#pin').focus(), 50);
+}
+
+$('#gateForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const pin = $('#pin').value.trim();
+  if (!pin) { $('#gateErr').textContent = 'Введите PIN'; return; }
+  LS.set('pin', pin);
+  $('#gateErr').textContent = '';
+  try {
+    await loadConfig();
+    $('#gate').hidden = true;
+    $('#app').hidden = false;
+  } catch (e) {
+    LS.del('pin');
+    $('#gateErr').textContent = e.message;
+  }
+});
+
+async function loadConfig() {
+  const cfg = await api('config');
+  if (Array.isArray(cfg.names) && cfg.names.length === 2) state.names = cfg.names;
+  renderWho();
+  if (cfg.counts) {
+    const c = cfg.counts;
+    $('#footer').textContent = 'В каталоге ' + c.places + ' ' + plural(c.places, 'место', 'места', 'мест') +
+      ', понравилось уже ' + c.liked + '. Хорошего вечера!';
+  }
+  return cfg;
+}
+
+/* ===== Настройки ===== */
+function renderWhen() {
+  for (const b of $('#when').children) b.setAttribute('aria-pressed', String(b.dataset.v === state.when));
+}
+$('#when').addEventListener('click', (ev) => {
+  const b = ev.target.closest('button');
+  if (!b) return;
+  state.when = b.dataset.v;
+  LS.set('when', state.when);
+  renderWhen();
+});
+
+function renderZones() {
+  const box = $('#zones');
+  box.replaceChildren(...ZONES.map((z, i) => {
+    const cls = ['station'];
+    if (i === 0) cls.push('first');
+    if (i === ZONES.length - 1) cls.push('last');
+    if (z.key === 'suburb' || z.key === 'city') cls.push('rail');
+    if (z.key === 'suburb') cls.push('transfer');
+    return h('button', {
+      type: 'button', class: cls.join(' '), 'data-zone': z.key,
+      'aria-pressed': String(state.zones.has(z.key)),
+    }, h('span', { class: 'dot', 'aria-hidden': 'true' }), h('span', { class: 'st-name' }, z.label), h('span', { class: 'st-hint' }, z.hint));
+  }));
+}
+$('#zones').addEventListener('click', (ev) => {
+  const b = ev.target.closest('.station');
+  if (!b) return;
+  const k = b.dataset.zone;
+  if (state.zones.has(k)) {
+    if (state.zones.size === 1) { toast('Хотя бы одна станция должна остаться'); return; }
+    state.zones.delete(k);
+  } else {
+    state.zones.add(k);
+  }
+  LS.set('zones', [...state.zones]);
+  state.exclude = [];
+  renderZones();
+});
+
+function renderCats() {
+  const all = h('button', { type: 'button', class: 'chip all', 'data-cat': '', 'aria-pressed': String(state.cats.size === 0) }, 'Всё подряд');
+  const chips = CATS.map(c => h('button', {
+    type: 'button', class: 'chip', 'data-cat': c.key, style: '--c: var(--c-' + c.key + ')',
+    'aria-pressed': String(state.cats.has(c.key)),
+  }, c.label));
+  $('#cats').replaceChildren(all, ...chips);
+}
+$('#cats').addEventListener('click', (ev) => {
+  const b = ev.target.closest('.chip');
+  if (!b) return;
+  const k = b.dataset.cat;
+  if (!k) state.cats.clear();
+  else if (state.cats.has(k)) state.cats.delete(k);
+  else state.cats.add(k);
+  if (state.cats.size === CATS.length) state.cats.clear();
+  LS.set('cats', [...state.cats]);
+  state.exclude = [];
+  renderCats();
+});
+
+function renderWho() {
+  const opts = ['вместе', state.names[0], state.names[1]];
+  if (!opts.includes(state.who)) state.who = 'вместе';
+  $('#who').replaceChildren(...opts.map(o => h('button', {
+    type: 'button', 'data-v': o, 'aria-pressed': String(o === state.who),
+  }, o === 'вместе' ? 'Вместе' : o)));
+}
+$('#who').addEventListener('click', (ev) => {
+  const b = ev.target.closest('button');
+  if (!b) return;
+  state.who = b.dataset.v;
+  LS.set('who', state.who);
+  renderWho();
+});
+
+/* ===== Подбор ===== */
+let loadingTimer;
+function setBusy(on) {
+  state.busy = on;
+  document.body.classList.toggle('busy', on);
+  $('#go').disabled = on;
+  const status = $('#status');
+  clearInterval(loadingTimer);
+  if (on) {
+    let i = Math.floor(Math.random() * LOADING.length);
+    status.textContent = LOADING[i] + '…';
+    loadingTimer = setInterval(() => { i = (i + 1) % LOADING.length; status.textContent = LOADING[i] + '…'; }, 1500);
+  } else {
+    status.textContent = '';
+  }
+}
+
+async function suggest() {
+  if (state.busy) return;
+  setBusy(true);
+  try {
+    const data = await api('suggest', {
+      zones: [...state.zones], categories: [...state.cats], when: state.when,
+      wish: $('#wish').value.trim(), who: state.who, exclude: state.exclude,
+    });
+    state.result = data;
+    renderResult(data);
+    if (data.weather && data.weather.text) {
+      $('#weather').textContent = data.weather.text;
+      $('#weather').hidden = false;
+    }
+    if (data.aiError) console.warn('ИИ не ответил, выбрал кубик:', data.aiError);
+  } catch (e) {
+    if (e.code === 'empty') renderEmpty(e.message);
+    else handleError(e);
+  } finally {
+    setBusy(false);
+  }
+}
+$('#go').addEventListener('click', () => { state.exclude = []; suggest(); });
+
+function renderEmpty(message) {
+  document.body.classList.add('has-result');
+  $('#result').replaceChildren(h('div', { class: 'empty' },
+    h('h2', null, 'Варианты закончились'),
+    h('p', null, message)));
+}
+
+function linkBtn(href, text, main) {
+  const u = safeUrl(href);
+  if (!u) return null;
+  return h('a', { class: 'lnk' + (main ? ' main' : ''), href: u, target: '_blank', rel: 'noopener' }, text);
+}
+
+function renderResult(data) {
+  const p = data.place;
+  const ai = data.ai || {};
+  const L = data.links || {};
+  const cat = catOf(p.category);
+
+  const media = h('div', { class: 'media' });
+  const glyph = h('div', { class: 'glyph', 'aria-hidden': 'true' }, ai.emoji || cat.emoji);
+  if (safeUrl(p.photo)) {
+    const img = h('img', { src: p.photo, alt: p.name, loading: 'lazy', referrerpolicy: 'no-referrer' });
+    img.addEventListener('error', () => img.replaceWith(glyph));
+    media.append(img);
+  } else {
+    media.append(glyph);
+  }
+  media.append(h('span', { class: 'stamp' }, p.categoryLabel || cat.label));
+
+  let time = null;
+  if (p.minutes) time = (p.approx ? '≈ ' : '') + p.minutes + ' мин от дома';
+  else if (p.atHome) time = 'ищем вокруг дома';
+
+  const meta = h('div', { class: 'meta' },
+    h('span', { class: 'pill cat' }, p.zoneLabel),
+    time && h('span', { class: 'pill' }, time),
+    p.city && p.city !== 'Москва' && h('span', { class: 'pill' }, p.city),
+    p.overnight && h('span', { class: 'pill' }, 'с ночёвкой'),
+  );
+
+  const rating = p.rating ? h('p', { class: 'rating' }, '★ ' + String(p.rating).replace('.', ','),
+    p.reviews ? h('span', null, ' (' + p.reviews + ' ' + plural(p.reviews, 'отзыв', 'отзыва', 'отзывов') + ' в 2ГИС)') : null) : null;
+
+  const tipText = ai.tip || p.note;
+  const body = h('div', { class: 't-body' },
+    ai.title && h('p', { class: 't-title' }, ai.title),
+    h('h2', { class: 't-name' }, p.name),
+    meta,
+    rating,
+    p.travel && h('p', { class: 'travel' }, 'Как добраться: ' + p.travel),
+    ai.pitch && h('p', { class: 'pitch' }, ai.pitch),
+    tipText && h('p', { class: 'tip' }, h('b', null, 'Совет. '), tipText),
+  );
+
+  const row = (label, gis, ya, main) => (safeUrl(gis) || safeUrl(ya))
+    ? h('div', { class: 'lrow' }, h('span', { class: 'lab' }, label),
+        linkBtn(gis, '2ГИС', main) || h('span'), linkBtn(ya, 'Яндекс', main) || h('span'))
+    : null;
+  const rasp = linkBtn(L.rasp, 'Расписание поездов');
+  if (rasp) rasp.classList.add('wide');
+  const links = h('div', { class: 'links' },
+    row('Маршрут', L.route2gis, L.routeYandex, true),
+    row(p.isSearch ? 'Места рядом' : 'Отзывы', L.gis, L.yandex),
+    row('Гостиницы', L.hotels2gis, L.hotelsYandex),
+    rasp,
+  );
+
+  const yes = h('button', { class: 'btn go-yes', type: 'button', 'aria-pressed': 'false' }, 'Идём!');
+  const other = h('button', { class: 'btn', type: 'button' }, 'Ещё вариант');
+  const no = h('button', { class: 'btn no', type: 'button' }, 'Не наше');
+
+  let going = false;
+  yes.addEventListener('click', async () => {
+    if (going) return;
+    yes.disabled = true;
+    try {
+      await api('feedback', { hid: data.hid, status: 'going', who: state.who });
+      going = true;
+      yes.setAttribute('aria-pressed', 'true');
+      yes.textContent = 'Идём! Записали';
+      toast('Отлично! После похода оцените место во вкладке «История»');
+    } catch (e) { handleError(e); }
+    yes.disabled = false;
+  });
+  other.addEventListener('click', () => {
+    state.exclude.push(p.id);
+    // если уже нажали «Идём!», запись в истории не трогаем
+    if (!going) api('feedback', { hid: data.hid, status: 'skip', who: state.who }).catch(console.warn);
+    suggest();
+  });
+  no.addEventListener('click', async () => {
+    no.disabled = true;
+    try {
+      await api('feedback', { hid: data.hid, status: 'dislike', who: state.who });
+      toast('Понятно, «' + p.name + '» больше не предложим');
+      state.exclude.push(p.id);
+      suggest();
+    } catch (e) { handleError(e); no.disabled = false; }
+  });
+
+  const notes = [];
+  if (data.relaxed) notes.push('Свежие варианты по этим настройкам закончились, поэтому повторяемся.');
+  if (ai.source === 'fallback') notes.push('ИИ сейчас не ответил, поэтому выбирал кубик.');
+  if (p.minutes && p.approx) notes.push('Время в пути примерное, точное покажет маршрут.');
+
+  const ticket = h('article', { class: 'ticket' + (reduceMotion ? '' : ' print'), style: '--c: var(--c-' + p.category + ')' },
+    media,
+    body,
+    h('div', { class: 'perf', 'aria-hidden': 'true' }),
+    h('div', { class: 't-actions' },
+      links,
+      h('div', { class: 'fb' }, yes, other, no),
+      notes.length ? h('p', { class: 'fineprint' }, notes.join(' ')) : null,
+    ),
+  );
+  $('#result').replaceChildren(ticket);
+  document.body.classList.add('has-result');
+  requestAnimationFrame(() => ticket.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }));
+}
+
+/* ===== История ===== */
+async function loadHistory() {
+  const list = $('#hist');
+  list.replaceChildren(h('li', { class: 'h-item' }, h('span', { class: 'h-sub' }, 'Загружаем…')));
+  try {
+    const data = await api('history', { limit: 60 });
+    renderHistory(data.items || []);
+  } catch (e) {
+    list.replaceChildren();
+    handleError(e);
+  }
+}
+
+function renderHistory(items) {
+  const list = $('#hist');
+  const visible = items.filter(it => it.status !== 'skip');
+  if (!visible.length) {
+    list.replaceChildren(h('li', { class: 'empty' },
+      h('h2', null, 'Здесь пока пусто'),
+      h('p', null, 'Нажмите «Куда сходить?!», а после похода возвращайтесь сюда поставить оценку — так советы станут точнее.')));
+    return;
+  }
+  list.replaceChildren(...visible.map(it => {
+    const cat = catByLabel(it.category);
+    const date = it.ts ? new Date(it.ts).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) : '';
+    const sub = [date, it.category, it.who && it.who !== 'вместе' ? 'выбирал(а) ' + it.who : null].filter(Boolean).join(', ');
+    const li = h('li', { class: 'h-item', style: cat ? '--c: var(--c-' + cat.key + ')' : null },
+      h('div', { class: 'h-top' },
+        h('span', { class: 'h-name' }, it.name),
+        h('span', { class: 'st ' + it.status }, STATUS_RU[it.status] || it.status)),
+      h('div', { class: 'h-sub' }, sub),
+      it.comment && h('div', { class: 'h-comment' }, '«' + it.comment + '»'),
+    );
+    if (it.status === 'going' || it.status === 'suggested') {
+      const comment = h('input', { class: 'input', type: 'text', maxlength: '300', placeholder: 'Как сходили?', 'aria-label': 'Комментарий к ' + it.name });
+      const rate = async (status) => {
+        try {
+          await api('feedback', { hid: it.hid, status, who: state.who, comment: comment.value.trim() });
+          it.status = status;
+          if (comment.value.trim()) it.comment = comment.value.trim();
+          toast(status === 'like' ? 'Записали: понравилось. Будем советовать похожее' : 'Записали. Такое больше не предложим');
+          renderHistory(items);
+        } catch (e) { handleError(e); }
+      };
+      li.append(h('div', { class: 'rate' }, comment,
+        h('button', { class: 'btn', type: 'button', onclick: () => rate('like'), 'aria-label': 'Понравилось' }, '👍'),
+        h('button', { class: 'btn no', type: 'button', onclick: () => rate('dislike'), 'aria-label': 'Не понравилось' }, '👎')));
+    }
+    return li;
+  }));
+}
+
+/* ===== Добавить место ===== */
+function fillAddForm() {
+  $('#a-cat').replaceChildren(...CATS.map(c => h('option', { value: c.key }, c.label)));
+  syncZoneFields();
+}
+function syncZoneFields() {
+  const z = $('#a-zone').value;
+  const out = z === 'suburb' || z === 'city';
+  document.querySelectorAll('#addForm [data-out]').forEach(el => { el.hidden = !out; });
+  document.querySelectorAll('#addForm [data-in]').forEach(el => { el.hidden = out; });
+  $('#a-night').checked = z === 'city';
+}
+$('#a-zone').addEventListener('change', syncZoneFields);
+
+$('#addForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const f = ev.target;
+  const err = $('#addErr');
+  err.textContent = '';
+  const name = $('#a-name').value.trim();
+  if (!name) { err.textContent = 'Напишите название места'; $('#a-name').focus(); return; }
+  const btn = f.querySelector('.submit');
+  btn.disabled = true;
+  try {
+    const res = await api('addPlace', {
+      name, category: $('#a-cat').value, link: $('#a-link').value.trim(), zone: $('#a-zone').value,
+      city: $('#a-city').value.trim(), travel: $('#a-travel').value.trim(), overnight: $('#a-night').checked,
+      minutes: $('#a-min').value, note: $('#a-note').value.trim(),
+    });
+    toast('Добавили «' + name + '» в каталог' + (res.hasCoords ? '' : '. Координат нет, маршрут не построим'));
+    f.reset();
+    syncZoneFields();
+  } catch (e) {
+    if (e.code === 'bad') err.textContent = e.message;
+    else handleError(e);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* ===== Вкладки ===== */
+const TABS = ['pick', 'history', 'add'];
+function openTab(name) {
+  for (const t of TABS) {
+    $('#tab-' + t).setAttribute('aria-selected', String(t === name));
+    $('#panel-' + t).hidden = t !== name;
+  }
+  if (name === 'history') loadHistory();
+}
+document.querySelector('.tabs').addEventListener('click', (ev) => {
+  const b = ev.target.closest('[role="tab"]');
+  if (b) openTab(b.id.replace('tab-', ''));
+});
+document.querySelector('.tabs').addEventListener('keydown', (ev) => {
+  if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') return;
+  const cur = TABS.findIndex(t => $('#tab-' + t).getAttribute('aria-selected') === 'true');
+  const next = TABS[(cur + (ev.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length];
+  openTab(next);
+  $('#tab-' + next).focus();
+});
+
+/* ===== Демо-режим: работает без бэкенда, чтобы посмотреть на сайт ===== */
+const DEMO_HOME = { lat: 55.7558, lon: 37.6173 };
+const DEMO_PLACES = [
+  { id: 'd1', name: 'Музей космонавтики', category: 'museum', zone: 'mid', minutes: 40, approx: true, lat: 55.8228, lon: 37.6398,
+    title: 'Вечер на орбите', pitch: 'Ракеты в натуральную величину, Белка и Стрелка в витрине и никакого дождя за шиворот. Почувствуйте себя экипажем, а после посадки можно отпраздновать на ВДНХ.', tip: 'Музей закрывается вечером, проверьте часы работы в 2ГИС.', emoji: '🚀' },
+  { id: 'd2', name: 'Бары на Покровке', category: 'bar', zone: 'near', minutes: 25, approx: true, lat: 55.7593, lon: 37.646, isSearch: true, search: 'бар',
+    title: 'Барный квест по Покровке', pitch: 'Правило простое: в каждом баре по одному коктейлю, а следующий выбирает тот, кто проиграл в «камень-ножницы-бумага». Покровка длинная, так что азарт обеспечен.', tip: 'Отсортируйте бары в картах по рейтингу и начните с самого высокого.', emoji: '🍸' },
+  { id: 'd3', name: 'Парк «Зарядье» и парящий мост', category: 'park', zone: 'near', minutes: 30, approx: true, lat: 55.7512, lon: 37.6285,
+    title: 'Прогулка над рекой', pitch: 'Парящий мост, вид на Кремль и тёплый павильон, где можно отогреться. Идеально, чтобы держаться за руки и делать вид, что вы в кино.', tip: 'К закату вид с моста особенно хорош.', emoji: '🌉' },
+  { id: 'd4', name: 'Кинотеатр «Иллюзион»', category: 'cinema', zone: 'near', minutes: 30, approx: true, lat: 55.7473, lon: 37.643,
+    title: 'Старое кино в высотке', pitch: 'Сталинская высотка, бархатные кресла и фильм, который вы давно обещали друг другу посмотреть. Ретро-свидание без машины времени.', tip: 'Загляните в афишу заранее: сеансов немного.', emoji: '🎞️' },
+  { id: 'd5', name: 'Тула: кремль и пряники', category: 'sight', zone: 'city', city: 'Тула', overnight: true, lat: 54.1966, lon: 37.6206, travel: '≈ 2 ч на «Ласточке» с Курского вокзала',
+    title: 'Пряничный уикенд', pitch: 'Утром кремль и музей оружия, вечером ужин и прогулка по набережной, а наутро Ясная Поляна. Пряник обязателен, спор о начинке тоже.', tip: 'Билеты на «Ласточку» в выходные разбирают быстро.', emoji: '🍪' },
+  { id: 'd6', name: 'Квест-комната', category: 'active', zone: 'near', atHome: true, isSearch: true, search: 'квест',
+    title: 'Проверка командной работы', pitch: 'Час на то, чтобы выбраться из запертой комнаты. Если справитесь, то и с икеевским шкафом справитесь. Если нет, то хотя бы посмеётесь.', tip: 'Выберите квест с рейтингом выше 4,8 и отзывами про загадки, а не про страшилки.', emoji: '🔐' },
+  { id: 'd7', name: 'Даниловский рынок', category: 'food', zone: 'mid', minutes: 35, approx: true, lat: 55.711, lon: 37.6205,
+    title: 'Гастротур по рынку', pitch: 'Вок, хинкали, фалафель и устрицы под одной крышей. Можно не спорить о кухне: берёте по тарелке из разных углов и меняетесь.', tip: 'Приходите голодными, но не злыми.', emoji: '🥟' },
+  { id: 'd8', name: 'Новый Иерусалим', category: 'sight', zone: 'suburb', city: 'Истра', lat: 55.9269, lon: 36.8436, travel: '≈ 1,5 ч на электричке с Рижского вокзала',
+    title: 'Электричка в другую эпоху', pitch: 'Белоснежный монастырь, река и тишина, которой в Москве не бывает. Целый день за городом, а к ужину вы уже дома.', tip: 'Возьмите термос: на территории много места для прогулок.', emoji: '⛪' },
+];
+const demoHistory = [];
+
+function demoLinks(p) {
+  const home = DEMO_HOME;
+  const c = p.lat ? { lat: p.lat, lon: p.lon } : home;
+  const q = p.isSearch ? p.search : p.name;
+  const z = p.isSearch ? 15 : p.zone === 'city' ? 13 : 16;
+  const e = encodeURIComponent;
+  const L = {
+    gis: 'https://2gis.ru/search/' + e(q) + '?m=' + c.lon + '%2C' + c.lat + '%2F' + z,
+    yandex: 'https://yandex.ru/maps/?text=' + e(q) + '&ll=' + c.lon + '%2C' + c.lat + '&z=' + z,
+  };
+  if (p.lat) {
+    L.route2gis = 'https://2gis.ru/directions/points/' + home.lon + '%2C' + home.lat + '%7C' + p.lon + '%2C' + p.lat;
+    L.routeYandex = 'https://yandex.ru/maps/?rtext=' + home.lat + '%2C' + home.lon + '~' + p.lat + '%2C' + p.lon + '&rtt=mt';
+  }
+  if (p.overnight) {
+    L.hotels2gis = 'https://2gis.ru/search/' + e('гостиница') + '?m=' + c.lon + '%2C' + c.lat + '%2F13';
+    L.hotelsYandex = 'https://yandex.ru/maps/?text=' + e('гостиница') + '&ll=' + c.lon + '%2C' + c.lat + '&z=13';
+  }
+  if (p.city && p.city !== 'Москва') L.rasp = 'https://rasp.yandex.ru/search/?fromName=' + e('Москва') + '&toName=' + e(p.city);
+  return L;
+}
+
+async function demoApi(action, payload) {
+  await new Promise(r => setTimeout(r, action === 'suggest' ? 1100 : 250));
+  if (action === 'config') return { ok: true, names: ['Он', 'Она'], counts: { places: DEMO_PLACES.length, liked: demoHistory.filter(x => x.status === 'like').length } };
+  if (action === 'suggest') {
+    const pool = DEMO_PLACES.filter(p =>
+      payload.zones.includes(p.zone) &&
+      (!payload.categories.length || payload.categories.includes(p.category)) &&
+      !payload.exclude.includes(p.id) &&
+      !demoHistory.some(x => x.place_id === p.id && x.status === 'dislike'));
+    if (!pool.length) throw new AppError('empty', 'В демо-каталоге всего восемь мест. Выберите больше станций или «Всё подряд».');
+    const p = pool[Math.floor(Math.random() * pool.length)];
+    const cat = catOf(p.category);
+    const hid = 'demo' + Date.now();
+    demoHistory.push({ hid, ts: new Date().toISOString(), place_id: p.id, name: p.name, category: cat.label, who: payload.who, status: 'suggested', comment: '' });
+    return {
+      ok: true, hid,
+      place: {
+        id: p.id, name: p.name, category: p.category, categoryLabel: cat.label, emoji: cat.emoji,
+        zone: p.zone, zoneLabel: ZONES.find(z => z.key === p.zone).label, city: p.city || 'Москва',
+        minutes: p.minutes || null, approx: !!p.approx, atHome: !!p.atHome, travel: p.travel || '',
+        overnight: !!p.overnight, note: '', isSearch: !!p.isSearch, photo: '', rating: null, reviews: null,
+      },
+      ai: { title: p.title, pitch: p.pitch, tip: p.tip, emoji: p.emoji, source: 'ai' },
+      links: demoLinks(p),
+      weather: { t: 3, text: '+3°, облачно' },
+    };
+  }
+  if (action === 'feedback') {
+    const it = demoHistory.find(x => x.hid === payload.hid);
+    if (it) { it.status = payload.status; if (payload.comment) it.comment = payload.comment; }
+    return { ok: true };
+  }
+  if (action === 'history') return { ok: true, items: demoHistory.slice().reverse() };
+  if (action === 'addPlace') return { ok: true, id: 'demo', hasCoords: /\d+\.\d+/.test(payload.link || '') };
+  throw new AppError('bad', 'Неизвестное действие');
+}
+
+/* ===== Старт ===== */
+function boot() {
+  renderWhen();
+  renderZones();
+  renderCats();
+  renderWho();
+  fillAddForm();
+  if (DEMO) {
+    $('#demoNote').hidden = false;
+    $('#app').hidden = false;
+    loadConfig().catch(handleError);
+    return;
+  }
+  if (!LS.get('pin', '')) { showGate(); return; }
+  $('#app').hidden = false;
+  loadConfig().catch(handleError);
+}
+boot();
+</script>
+</body>
+</html>

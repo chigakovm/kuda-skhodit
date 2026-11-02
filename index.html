@@ -147,7 +147,17 @@
   .go .die { font-size: 26px; display: inline-block; }
   .busy .go .die { animation: roll .7s linear infinite; }
   @keyframes roll { to { transform: rotate(360deg); } }
-  .status { min-height: 22px; margin: 10px 0 0; text-align: center; color: var(--ink-2); font-size: 14px; }
+  .loader {
+    position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 16px;
+    background: rgba(245,246,251,.74); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  }
+  .loader-card {
+    width: min(100%, 340px); padding: 26px 22px 22px; border-radius: 24px; background: var(--card); text-align: center;
+    box-shadow: 0 1px 0 var(--rule), 0 24px 50px -22px rgba(30,34,66,.5);
+  }
+  .loader-die { display: inline-block; font-size: 54px; line-height: 1; animation: roll .8s linear infinite; }
+  .loader-msg { margin: 14px 0 0; font-weight: 600; font-size: 17px; }
+  .loader-time { margin: 6px 0 0; min-height: 21px; color: var(--ink-3); font-size: 14px; }
 
   /* Билет с результатом */
   .result { margin-top: 18px; }
@@ -329,7 +339,6 @@
 
       <div class="go-bar" id="goBar">
         <button class="go" id="go" type="button"><span class="die" aria-hidden="true">🎲</span>Куда сходить?!</button>
-        <p class="status" id="status" aria-live="polite"></p>
       </div>
     </section>
 
@@ -395,6 +404,14 @@
 
 <div class="toast" id="toast" role="status" hidden></div>
 
+<div class="loader" id="loader" hidden>
+  <div class="loader-card" role="status" aria-live="polite">
+    <span class="loader-die" aria-hidden="true">🎲</span>
+    <p class="loader-msg" id="loaderMsg"></p>
+    <p class="loader-time" id="loaderTime"></p>
+  </div>
+</div>
+
 <script>
 /* ===== Настройка: вставьте сюда адрес веб-приложения Apps Script (заканчивается на /exec) ===== */
 const API_URL = 'https://script.google.com/macros/s/AKfycbw84fG9yae7pxvQ0KTyWwzZ7xyMdreEAENAqWRjMHnol818lCxrRzNra5nnpaETR9bQGA/exec';
@@ -440,8 +457,10 @@ const state = {
   zones: new Set(LS.get('zones', ['near', 'mid'])),
   cats: new Set(LS.get('cats', [])),
   who: LS.get('who', 'вместе'),
-  result: null,
-  exclude: [],
+  queue: [],        // готовые варианты: «Ещё вариант» показывает их без ожидания
+  shown: [],        // что уже показали за этот сеанс
+  prefetching: null,
+  gen: 0,           // меняется при смене настроек: старые ответы выбрасываем
   busy: false,
 };
 
@@ -490,13 +509,19 @@ class AppError extends Error {
 async function api(action, payload = {}) {
   if (DEMO) return demoApi(action, payload);
   let res;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), action === 'suggest' ? 75000 : 25000);
   try {
     res = await fetch(API_URL, {
       method: 'POST',
       body: JSON.stringify(Object.assign({ action, pin: LS.get('pin', '') }, payload)),
+      signal: ctrl.signal,
     });
   } catch (e) {
+    if (e.name === 'AbortError') throw new AppError('timeout', 'Скрипт слишком долго не отвечает. Попробуйте ещё раз — обычно это разовая заминка.');
     throw new AppError('network', 'Нет связи со скриптом. Проверьте интернет и адрес API_URL.');
+  } finally {
+    clearTimeout(timer);
   }
   let data;
   try { data = await res.json(); } catch (e) {
@@ -557,6 +582,7 @@ $('#when').addEventListener('click', (ev) => {
   if (!b) return;
   state.when = b.dataset.v;
   LS.set('when', state.when);
+  resetQueue();
   renderWhen();
 });
 
@@ -585,7 +611,7 @@ $('#zones').addEventListener('click', (ev) => {
     state.zones.add(k);
   }
   LS.set('zones', [...state.zones]);
-  state.exclude = [];
+  resetQueue();
   renderZones();
 });
 
@@ -606,7 +632,7 @@ $('#cats').addEventListener('click', (ev) => {
   else state.cats.add(k);
   if (state.cats.size === CATS.length) state.cats.clear();
   LS.set('cats', [...state.cats]);
-  state.exclude = [];
+  resetQueue();
   renderCats();
 });
 
@@ -622,41 +648,85 @@ $('#who').addEventListener('click', (ev) => {
   if (!b) return;
   state.who = b.dataset.v;
   LS.set('who', state.who);
+  resetQueue();
   renderWho();
 });
 
 /* ===== Подбор ===== */
-let loadingTimer;
+let loaderDelay, loaderTick;
 function setBusy(on) {
   state.busy = on;
   document.body.classList.toggle('busy', on);
-  $('#go').disabled = on;
-  const status = $('#status');
-  clearInterval(loadingTimer);
-  if (on) {
-    let i = Math.floor(Math.random() * LOADING.length);
-    status.textContent = LOADING[i] + '…';
-    loadingTimer = setInterval(() => { i = (i + 1) % LOADING.length; status.textContent = LOADING[i] + '…'; }, 1500);
-  } else {
-    status.textContent = '';
-  }
+  document.querySelectorAll('#go, .fb .btn').forEach(b => { b.disabled = on; });
+  clearTimeout(loaderDelay);
+  clearInterval(loaderTick);
+  const loader = $('#loader');
+  if (!on) { loader.hidden = true; return; }
+  const started = Date.now();
+  let i = Math.floor(Math.random() * LOADING.length);
+  const msg = $('#loaderMsg');
+  const time = $('#loaderTime');
+  msg.textContent = LOADING[i] + '…';
+  time.textContent = '';
+  // короткие ожидания не мигают загрузчиком
+  loaderDelay = setTimeout(() => { loader.hidden = false; }, 150);
+  loaderTick = setInterval(() => {
+    const sec = Math.round((Date.now() - started) / 1000);
+    if (sec % 3 === 0) { i = (i + 1) % LOADING.length; msg.textContent = LOADING[i] + '…'; }
+    if (sec >= 4) time.textContent = sec < 25
+      ? 'Прошло ' + sec + ' с. ИИ пишет сразу три варианта — следующие откроются мгновенно'
+      : 'Прошло ' + sec + ' с. Что-то долго, но ещё ждём';
+  }, 1000);
 }
 
-async function suggest() {
+function resetQueue() {
+  state.queue = [];
+  state.prefetching = null;
+  state.gen++;
+}
+
+function suggestParams() {
+  const exclude = new Set(state.shown.concat(state.queue.map(o => o.place.id)));
+  return {
+    zones: [...state.zones], categories: [...state.cats], when: state.when,
+    wish: $('#wish').value.trim(), who: state.who, exclude: [...exclude],
+  };
+}
+
+async function fetchBatch() {
+  const gen = state.gen;
+  const data = await api('suggest', suggestParams());
+  if (gen !== state.gen) return [];
+  if (data.weather && data.weather.text) {
+    $('#weather').textContent = data.weather.text;
+    $('#weather').hidden = false;
+  }
+  if (data.aiError) console.warn('ИИ не ответил, выбрал кубик:', data.aiError);
+  if (data.ms) console.info('Подбор: всего ' + data.ms.total + ' мс, из них ИИ ' + data.ms.ai + ' мс');
+  const options = data.options || (data.place ? [data] : []);
+  return options.map(o => Object.assign(o, { relaxed: !!data.relaxed }));
+}
+
+// Заранее готовим следующую пачку, пока вы читаете текущий вариант
+function prefetch() {
+  if (state.prefetching || state.queue.length > 1) return;
+  const gen = state.gen;
+  const job = fetchBatch()
+    .then(opts => { if (gen === state.gen) state.queue.push(...opts); })
+    .catch(e => console.warn('Не удалось подготовить следующие варианты:', e.message))
+    .finally(() => { if (state.prefetching === job) state.prefetching = null; });
+  state.prefetching = job;
+}
+
+async function nextOption({ fresh = false } = {}) {
   if (state.busy) return;
+  if (fresh) resetQueue();
+  if (state.queue.length) { showOption(state.queue.shift()); return; }
   setBusy(true);
   try {
-    const data = await api('suggest', {
-      zones: [...state.zones], categories: [...state.cats], when: state.when,
-      wish: $('#wish').value.trim(), who: state.who, exclude: state.exclude,
-    });
-    state.result = data;
-    renderResult(data);
-    if (data.weather && data.weather.text) {
-      $('#weather').textContent = data.weather.text;
-      $('#weather').hidden = false;
-    }
-    if (data.aiError) console.warn('ИИ не ответил, выбрал кубик:', data.aiError);
+    if (state.prefetching) await state.prefetching;
+    if (!state.queue.length) state.queue.push(...await fetchBatch());
+    if (state.queue.length) showOption(state.queue.shift());
   } catch (e) {
     if (e.code === 'empty') renderEmpty(e.message);
     else handleError(e);
@@ -664,7 +734,19 @@ async function suggest() {
     setBusy(false);
   }
 }
-$('#go').addEventListener('click', () => { state.exclude = []; suggest(); });
+$('#go').addEventListener('click', () => nextOption({ fresh: true }));
+$('#wish').addEventListener('change', resetQueue);
+
+function showOption(opt) {
+  state.shown.push(opt.place.id);
+  opt.hidPromise = api('show', {
+    place_id: opt.place.id, name: opt.place.name, category: opt.place.category,
+    zone: opt.place.zone, pitch: opt.ai ? opt.ai.pitch : '', who: state.who,
+  }).then(r => r.hid);
+  opt.hidPromise.catch(e => console.warn('Не удалось записать в историю:', e.message));
+  renderResult(opt);
+  prefetch();
+}
 
 function renderEmpty(message) {
   document.body.classList.add('has-result');
@@ -729,7 +811,7 @@ function renderResult(data) {
   if (rasp) rasp.classList.add('wide');
   const links = h('div', { class: 'links' },
     row('Маршрут', L.route2gis, L.routeYandex, true),
-    row(p.isSearch ? 'Места рядом' : 'Отзывы', L.gis, L.yandex),
+    row(p.isSearch ? 'Места' : 'Отзывы', L.gis, L.yandex),
     row('Гостиницы', L.hotels2gis, L.hotelsYandex),
     rasp,
   );
@@ -743,7 +825,7 @@ function renderResult(data) {
     if (going) return;
     yes.disabled = true;
     try {
-      await api('feedback', { hid: data.hid, status: 'going', who: state.who });
+      await api('feedback', { hid: await data.hidPromise, status: 'going', who: state.who });
       going = true;
       yes.setAttribute('aria-pressed', 'true');
       yes.textContent = 'Идём! Записали';
@@ -752,18 +834,18 @@ function renderResult(data) {
     yes.disabled = false;
   });
   other.addEventListener('click', () => {
-    state.exclude.push(p.id);
     // если уже нажали «Идём!», запись в истории не трогаем
-    if (!going) api('feedback', { hid: data.hid, status: 'skip', who: state.who }).catch(console.warn);
-    suggest();
+    if (!going) data.hidPromise.then(hid => api('feedback', { hid, status: 'skip', who: state.who })).catch(e => console.warn(e.message));
+    nextOption();
   });
   no.addEventListener('click', async () => {
     no.disabled = true;
     try {
-      await api('feedback', { hid: data.hid, status: 'dislike', who: state.who });
+      await api('feedback', { hid: await data.hidPromise, status: 'dislike', who: state.who });
       toast('Понятно, «' + p.name + '» больше не предложим');
-      state.exclude.push(p.id);
-      suggest();
+      state.queue = state.queue.filter(o => o.place.id !== p.id);
+      no.disabled = false;
+      nextOption();
     } catch (e) { handleError(e); no.disabled = false; }
   });
 
@@ -945,8 +1027,10 @@ function demoLinks(p) {
 }
 
 async function demoApi(action, payload) {
-  await new Promise(r => setTimeout(r, action === 'suggest' ? 1100 : 250));
-  if (action === 'config') return { ok: true, names: ['Он', 'Она'], counts: { places: DEMO_PLACES.length, liked: demoHistory.filter(x => x.status === 'like').length } };
+  await new Promise(r => setTimeout(r, action === 'suggest' ? 2500 : 250));
+  if (action === 'config') {
+    return { ok: true, names: ['Он', 'Она'], counts: { places: DEMO_PLACES.length, liked: demoHistory.filter(x => x.status === 'like').length } };
+  }
   if (action === 'suggest') {
     const pool = DEMO_PLACES.filter(p =>
       payload.zones.includes(p.zone) &&
@@ -954,22 +1038,13 @@ async function demoApi(action, payload) {
       !payload.exclude.includes(p.id) &&
       !demoHistory.some(x => x.place_id === p.id && x.status === 'dislike'));
     if (!pool.length) throw new AppError('empty', 'В демо-каталоге всего восемь мест. Выберите больше станций или «Всё подряд».');
-    const p = pool[Math.floor(Math.random() * pool.length)];
-    const cat = catOf(p.category);
-    const hid = 'demo' + Date.now();
-    demoHistory.push({ hid, ts: new Date().toISOString(), place_id: p.id, name: p.name, category: cat.label, who: payload.who, status: 'suggested', comment: '' });
-    return {
-      ok: true, hid,
-      place: {
-        id: p.id, name: p.name, category: p.category, categoryLabel: cat.label, emoji: cat.emoji,
-        zone: p.zone, zoneLabel: ZONES.find(z => z.key === p.zone).label, city: p.city || 'Москва',
-        minutes: p.minutes || null, approx: !!p.approx, atHome: !!p.atHome, travel: p.travel || '',
-        overnight: !!p.overnight, note: '', isSearch: !!p.isSearch, photo: '', rating: null, reviews: null,
-      },
-      ai: { title: p.title, pitch: p.pitch, tip: p.tip, emoji: p.emoji, source: 'ai' },
-      links: demoLinks(p),
-      weather: { t: 3, text: '+3°, облачно' },
-    };
+    const picks = pool.sort(() => Math.random() - 0.5).slice(0, 3);
+    return { ok: true, weather: { t: 3, text: '+3°, облачно' }, options: picks.map(demoOption) };
+  }
+  if (action === 'show') {
+    const hid = 'demo' + Date.now() + Math.random().toString(36).slice(2, 5);
+    demoHistory.push({ hid, ts: new Date().toISOString(), place_id: payload.place_id, name: payload.name, category: catOf(payload.category).label, who: payload.who, status: 'suggested', comment: '' });
+    return { ok: true, hid };
   }
   if (action === 'feedback') {
     const it = demoHistory.find(x => x.hid === payload.hid);
@@ -979,6 +1054,20 @@ async function demoApi(action, payload) {
   if (action === 'history') return { ok: true, items: demoHistory.slice().reverse() };
   if (action === 'addPlace') return { ok: true, id: 'demo', hasCoords: /\d+\.\d+/.test(payload.link || '') };
   throw new AppError('bad', 'Неизвестное действие');
+}
+
+function demoOption(p) {
+  const cat = catOf(p.category);
+  return {
+    place: {
+      id: p.id, name: p.name, category: p.category, categoryLabel: cat.label, emoji: cat.emoji,
+      zone: p.zone, zoneLabel: ZONES.find(z => z.key === p.zone).label, city: p.city || 'Москва',
+      minutes: p.minutes || null, approx: !!p.approx, atHome: !!p.atHome, travel: p.travel || '',
+      overnight: !!p.overnight, note: '', isSearch: !!p.isSearch, photo: '', rating: null, reviews: null,
+    },
+    ai: { title: p.title, pitch: p.pitch, tip: p.tip, emoji: p.emoji, source: 'ai' },
+    links: demoLinks(p),
+  };
 }
 
 /* ===== Старт ===== */

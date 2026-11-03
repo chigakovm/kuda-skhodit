@@ -189,6 +189,7 @@
   .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
   .pill { padding: 4px 10px; border-radius: 999px; background: #EEEFF6; font-size: 14px; color: var(--ink-2); }
   .pill.cat { background: color-mix(in srgb, var(--c) 12%, white); color: color-mix(in srgb, var(--c) 70%, black); font-weight: 500; }
+  .pill.wish { background: #E5F4EC; color: var(--green); font-weight: 500; }
   .rating { margin: 12px 0 0; font-weight: 600; }
   .rating span { font-weight: 400; color: var(--ink-3); }
   .pitch { margin: 14px 0 0; font-size: 17px; line-height: 1.6; }
@@ -329,7 +330,7 @@
 
       <div class="field">
         <label class="label" for="wish">Пожелание <small>необязательно</small></label>
-        <input class="input" id="wish" type="text" maxlength="200" placeholder="Например: тепло и вкусно">
+        <input class="input" id="wish" type="text" maxlength="200" placeholder="Например: караоке или грузинская кухня">
       </div>
 
       <div class="field">
@@ -704,7 +705,7 @@ async function fetchBatch() {
   if (data.aiError) console.warn('ИИ не ответил, выбрал кубик:', data.aiError);
   if (data.ms) console.info('Подбор: всего ' + data.ms.total + ' мс, из них ИИ ' + data.ms.ai + ' мс');
   const options = data.options || (data.place ? [data] : []);
-  return options.map(o => Object.assign(o, { relaxed: !!data.relaxed }));
+  return options.map(o => Object.assign(o, { relaxed: !!data.relaxed, wishNote: data.wishNote || null }));
 }
 
 // Заранее готовим следующую пачку, пока вы читаете текущий вариант
@@ -735,7 +736,14 @@ async function nextOption({ fresh = false } = {}) {
   }
 }
 $('#go').addEventListener('click', () => nextOption({ fresh: true }));
-$('#wish').addEventListener('change', resetQueue);
+// Пока вы дописываете пожелание, скрипт заранее разбирает его — к нажатию кнопки разбор уже готов
+let wishTimer;
+$('#wish').addEventListener('input', () => {
+  resetQueue();
+  clearTimeout(wishTimer);
+  const wish = $('#wish').value.trim();
+  if (wish.length >= 3) wishTimer = setTimeout(() => api('parseWish', { wish }).catch(() => {}), 1200);
+});
 
 function showOption(opt) {
   state.shown.push(opt.place.id);
@@ -784,6 +792,7 @@ function renderResult(data) {
 
   const meta = h('div', { class: 'meta' },
     h('span', { class: 'pill cat' }, p.zoneLabel),
+    p.match && h('span', { class: 'pill wish' }, 'по пожеланию'),
     time && h('span', { class: 'pill' }, time),
     p.city && p.city !== 'Москва' && h('span', { class: 'pill' }, p.city),
     p.overnight && h('span', { class: 'pill' }, 'с ночёвкой'),
@@ -851,6 +860,9 @@ function renderResult(data) {
 
   const notes = [];
   if (data.relaxed) notes.push('Свежие варианты по этим настройкам закончились, поэтому повторяемся.');
+  if (data.wishNote === 'cats' && p.match) notes.push('Под пожелание нашлось только в других категориях, поэтому показываем его, несмотря на выбранные кнопки.');
+  if (data.wishNote === 'zones') notes.push('Под пожелание есть места дальше выбранных станций. Добавьте станцию, чтобы их увидеть.');
+  if (data.wishNote === 'miss') notes.push('Точно под пожелание в каталоге ничего нет, поэтому подобрали похожее. Знаете подходящее место — добавьте его во вкладке «Добавить».');
   if (ai.source === 'fallback') notes.push('ИИ сейчас не ответил, поэтому выбирал кубик.');
   if (p.minutes && p.approx) notes.push('Время в пути примерное, точное покажет маршрут.');
 
@@ -1041,6 +1053,7 @@ async function demoApi(action, payload) {
     const picks = pool.sort(() => Math.random() - 0.5).slice(0, 3);
     return { ok: true, weather: { t: 3, text: '+3°, облачно' }, options: picks.map(demoOption) };
   }
+  if (action === 'parseWish') return { ok: true, filter: null };
   if (action === 'show') {
     const hid = 'demo' + Date.now() + Math.random().toString(36).slice(2, 5);
     demoHistory.push({ hid, ts: new Date().toISOString(), place_id: payload.place_id, name: payload.name, category: catOf(payload.category).label, who: payload.who, status: 'suggested', comment: '' });
